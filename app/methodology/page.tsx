@@ -98,10 +98,7 @@ export default function MethodologyPage() {
             To identify where gaps are likely to remain after currently
             committed investment concludes, HR&amp;A scores every census
             block in the service area on three measures, then combines them
-            into a single priority ranking. The scoring script
-            (<code className="rounded bg-muted px-1 py-0.5 text-xs">
-              broadband_priority_matrix.py
-            </code>) runs this logic at the block level, then rolls the
+            into a single priority ranking. The scoring script runs this logic at the block level, then rolls the
             results up to the tract and county maps.
           </p>
           <ol className="mt-3 flex flex-col gap-3 text-sm text-muted-foreground">

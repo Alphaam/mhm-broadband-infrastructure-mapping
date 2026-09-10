@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useRef, useState } from "react";
 import { MapCanvas, type MapCanvasHandle } from "./map-canvas";
 import { LayerControlPanel } from "./layer-control-panel";
@@ -20,6 +21,10 @@ export function MapSectionView({ section }: { section: MapSection }) {
   const [activeLayerIds, setActiveLayerIds] = useState(() =>
     defaultActiveLayerIds(section.id),
   );
+  // Collapsed by default on mobile, where the panel would otherwise push the
+  // map below the fold; irrelevant on desktop, which always shows it (the
+  // aside below ignores this state at the md breakpoint and up).
+  const [panelOpen, setPanelOpen] = useState(false);
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
@@ -32,8 +37,22 @@ export function MapSectionView({ section }: { section: MapSection }) {
         </p>
       </div>
 
+      <button
+        type="button"
+        onClick={() => setPanelOpen((open) => !open)}
+        aria-expanded={panelOpen}
+        className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-sidebar px-4 py-2.5 text-sm font-medium text-foreground md:hidden"
+      >
+        Layers &amp; Legend
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${panelOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
       <div className="relative flex min-h-0 flex-1 flex-col md:flex-row">
-        <aside className="flex max-h-[60vh] shrink-0 flex-col overflow-y-auto border-b border-border bg-sidebar md:h-full md:max-h-none md:w-[36rem] md:overflow-visible md:border-b-0 md:border-r">
+        <aside
+          className={`${panelOpen ? "flex" : "hidden"} max-h-[60vh] shrink-0 flex-col overflow-y-auto border-b border-border bg-sidebar md:flex md:h-full md:max-h-none md:w-[36rem] md:overflow-visible md:border-b-0 md:border-r`}
+        >
           <div className="flex shrink-0 items-center justify-between gap-2 border-b border-sidebar-border px-4 py-3">
             <CountySearch
               ref={countySearchRef}

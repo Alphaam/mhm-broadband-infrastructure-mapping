@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Methodology & Data Sources — MHM Broadband Infrastructure Mapping",
+  title: "Methodology & Data Sources: MHM Broadband Infrastructure Mapping",
 };
 
 function Source({ children }: { children: React.ReactNode }) {
@@ -33,16 +33,16 @@ export default function MethodologyPage() {
             Availability, speed, technology, and consumer-choice metrics are
             all reported at the individual broadband-serviceable location
             (aggregated to the census block for mapping), based on the FCC
-            Broadband Data Collection (BDC) — the most current public
-            dataset on internet availability in the United States.
+            Broadband Data Collection (BDC), the most current public dataset
+            on internet availability in the United States.
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">
               Highest Quality Technology Available
             </span>{" "}
             is ordered by reliability, preferencing wireline technologies
-            (fiber, cable, and copper) ahead of fixed wireless and satellite
-            — a location with both fiber and satellite available shows as
+            (fiber, cable, and copper) ahead of fixed wireless and satellite.
+            A location with both fiber and satellite available shows as
             fiber.
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -66,15 +66,16 @@ export default function MethodologyPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Federal and state broadband funding awards active across the
             service area, drawn from FCC and Texas Broadband Development
-            Office (BDO) award data — 8 federal programs (BEAD, the Tribal
-            Broadband Connectivity Program, the Enhanced Alternative Connect
-            America Cost Model, Connect America Fund Phase II, the Rural
-            Digital Opportunity Fund, USDA Rural Utilities Service&apos;s
-            ReConnect and Telephone Loan programs, and the U.S. Treasury
-            Capital Projects Fund&apos;s BOOT II) and 3 Texas state programs
-            (Texas Department of Agriculture Priority Hospitals and Network
-            Improvements grants, and the Texas State Library and Archives
-            Commission&apos;s library infrastructure grants).
+            Office (BDO) award data. This covers 8 federal programs (BEAD,
+            the Tribal Broadband Connectivity Program, the Enhanced
+            Alternative Connect America Cost Model, Connect America Fund
+            Phase II, the Rural Digital Opportunity Fund, USDA Rural
+            Utilities Service&apos;s ReConnect and Telephone Loan programs,
+            and the U.S. Treasury Capital Projects Fund&apos;s BOOT II) and
+            3 Texas state programs (Texas Department of Agriculture
+            Priority Hospitals and Network Improvements grants, and the
+            Texas State Library and Archives Commission&apos;s library
+            infrastructure grants).
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Per-project funding, provider, technology, and speed tier shown
@@ -94,48 +95,84 @@ export default function MethodologyPage() {
             Anticipated Gaps
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            To identify where gaps are likely to remain after known
-            investment, HR&amp;A built an index for every census block in
-            the service area, blending three scores:
+            To identify where gaps are likely to remain after currently
+            committed investment concludes, HR&amp;A scores every census
+            block in the service area on three measures, then combines them
+            into a single priority ranking. The scoring script
+            (<code className="rounded bg-muted px-1 py-0.5 text-xs">
+              broadband_priority_matrix.py
+            </code>) runs this logic at the block level, then rolls the
+            results up to the tract and county maps.
           </p>
           <ol className="mt-3 flex flex-col gap-3 text-sm text-muted-foreground">
             <li>
               <span className="font-medium text-foreground">
-                1. Current Infrastructure
+                1. Current Service Score.
               </span>{" "}
-              — best available terrestrial internet speed today, compared
-              against NTIA&apos;s definitions: <em>served</em> (at least
-              100/20 Mbps), <em>underserved</em> (below 100/20 but at least
-              25/3 Mbps), and <em>unserved</em> (below 25/3 Mbps).
+              A 0 to 100 score based on each block&apos;s best available
+              terrestrial download and upload speeds today. Satellite
+              isn&apos;t counted, since most state and federal broadband
+              offices don&apos;t treat it as an equivalent substitute for
+              wireline or fixed wireless buildout. NTIA&apos;s three tiers
+              set the score bands: <em>unserved</em> (below 25/3 Mbps) scores
+              0 to 40, <em>underserved</em> (25/3 up to 100/20 Mbps) scores
+              40 to 100, and <em>served</em> (at least 100/20 Mbps) scores a
+              flat 100. Within each band, the score rises smoothly rather
+              than jumping straight to the next value, so two blocks in the
+              same tier can still score differently depending on how close
+              each one is to the next tier up.
             </li>
             <li>
               <span className="font-medium text-foreground">
-                2. Planned Investments
+                2. Post-Investment Service Score.
               </span>{" "}
-              — best available speed projected after known investment from
-              the 11 federal and state programs above, using the same
-              served/underserved/unserved tiers.
+              The same 0 to 100 scoring, applied to whichever is better for
+              that block: its current speed, or the speed committed by
+              funded federal and state programs (the 11 programs listed
+              under <em>Current Investments</em> above) once built. It
+              assumes every committed program is completed and delivers its
+              full promised speed.
             </li>
             <li>
               <span className="font-medium text-foreground">
-                3. Economic Need
+                3. Socioeconomic Need Score.
               </span>{" "}
-              — percentile ranking of median household income, to account
-              for adoption challenges that persist even once infrastructure
-              is in place.
+              Each block takes on its census tract&apos;s median household
+              income, converted to a 0 to 100 percentile rank and inverted
+              so the lowest-income tracts score highest. This accounts for
+              adoption barriers, like cost and device access, that persist
+              even once infrastructure is in place.
             </li>
           </ol>
+          <p className="mt-4 text-sm text-muted-foreground">
+            The Post-Investment Service Score converts directly into a{" "}
+            <span className="font-medium text-foreground">Priority Score</span>:
+            100 minus the Post-Investment Score, multiplied by a{" "}
+            <em>need multiplier</em> that runs from 0.5x in the
+            highest-income tracts up to 1.5x in the lowest-income ones. The
+            same size infrastructure gap can count for up to three times as
+            much in a low-income tract as in a high-income one.
+          </p>
           <p className="mt-3 text-sm text-muted-foreground">
-            These three combine into the{" "}
+            Blocks are then sorted into five tiers: <em>Resolved / Low</em>,{" "}
+            <em>Watch</em>, <em>Medium</em>, <em>High</em>, and{" "}
+            <em>Critical</em>, targeting roughly an 80/10/6/3/1% split. The
+            split is measured in{" "}
             <span className="font-medium text-foreground">
-              Anticipated Gaps
+              serviceable locations
             </span>{" "}
-            map&apos;s investment-priority index, grouped into five tiers:{" "}
-            <em>Resolved / Low</em>, <em>Watch</em>, <em>Medium</em>,{" "}
-            <em>High</em>, and <em>Critical</em> — locations already served,
-            or served after planned investment, land in the lower tiers;
-            locations with weak current and projected infrastructure and
-            high economic need rank highest.
+            (individual homes and businesses), not blocks, and tiers are
+            assigned by each location&apos;s position in the ranked
+            distribution of Priority Scores rather than by fixed score
+            cutoffs.
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            The county map uses the same method, but ranks counties against
+            each other rather than rolling up their blocks&apos; tiers. Each
+            county&apos;s tier reflects its location-weighted average
+            Priority Score relative to the other 73 counties, not the share
+            of its own locations that are individually Critical. That
+            breakdown is available separately, county by county.
           </p>
           <Source>
             Source: HR&amp;A analysis blending FCC, ACS, Feeding America, and
@@ -149,10 +186,10 @@ export default function MethodologyPage() {
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Areas shown in light grey on any map mean the underlying dataset
-            has no value there for that specific metric — typically no
+            has no value there for that specific metric, typically no
             residential population (for FCC location-level data) or a
-            program/grant that didn&apos;t reach that county. It doesn&apos;t
-            mean the value is zero.
+            program or grant that didn&apos;t reach that county. It
+            doesn&apos;t mean the value is zero.
           </p>
         </section>
       </div>

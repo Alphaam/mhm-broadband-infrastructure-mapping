@@ -19,3 +19,11 @@ export const SERVICE_AREA_OUTLINE_PATH = "boundaries/service-area-outline.geojso
 /** County name field is CNTY_NM, not the more generic "NAME" — see docs/data-dictionary.md. */
 export const SERVICE_AREA_COUNTIES_PATH = "boundaries/service-area-counties.geojson";
 export const COUNTY_NAME_PROPERTY = "CNTY_NM";
+
+/**
+ * Regions are counties dissolved by the crosswalk in
+ * scripts/data/regions-crosswalk.csv (see scripts/data/build-regions.sh) —
+ * not a separately-sourced boundary. Field is REGION (single-letter id).
+ */
+export const SERVICE_AREA_REGIONS_PATH = "boundaries/service-area-regions.geojson";
+export const REGION_NAME_PROPERTY = "REGION";

@@ -84,3 +84,9 @@ export type County = {
   name: string;
   bbox: [number, number, number, number];
 };
+
+export type Region = {
+  /** Single-letter region id from the REGION field (e.g. "A"). */
+  name: string;
+  bbox: [number, number, number, number];
+};

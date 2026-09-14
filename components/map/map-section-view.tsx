@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { MapCanvas, type MapCanvasHandle } from "./map-canvas";
 import { LayerControlPanel } from "./layer-control-panel";
 import { Legend } from "./legend";
-import { CountySearch, type CountySearchHandle } from "./county-search";
+import { PlaceSearch, type PlaceSearchHandle } from "./place-search";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { defaultActiveLayerIds, layersForSection } from "./layers.config";
@@ -17,7 +17,7 @@ export function MapSectionView({ section }: { section: MapSection }) {
   // functions can't cross the server->client boundary as props.
   const layers = layersForSection(section.id);
   const mapRef = useRef<MapCanvasHandle>(null);
-  const countySearchRef = useRef<CountySearchHandle>(null);
+  const placeSearchRef = useRef<PlaceSearchHandle>(null);
   const [activeLayerIds, setActiveLayerIds] = useState(() =>
     defaultActiveLayerIds(section.id),
   );
@@ -54,21 +54,29 @@ export function MapSectionView({ section }: { section: MapSection }) {
           className={`${panelOpen ? "flex" : "hidden"} max-h-[60vh] shrink-0 flex-col overflow-y-auto border-b border-border bg-sidebar md:flex md:h-full md:max-h-none md:w-[36rem] md:overflow-visible md:border-b-0 md:border-r`}
         >
           <div className="flex shrink-0 items-center justify-between gap-2 border-b border-sidebar-border px-4 py-3">
-            <CountySearch
-              ref={countySearchRef}
-              onSelect={(county) => {
-                mapRef.current?.flyToBounds(county.bbox);
-                mapRef.current?.highlightCounty(county.name);
+            <PlaceSearch
+              ref={placeSearchRef}
+              onSelect={(selection) => {
+                if (selection.type === "county") {
+                  mapRef.current?.flyToBounds(selection.county.bbox);
+                  mapRef.current?.highlightCounty(selection.county.name);
+                  mapRef.current?.highlightRegion(null);
+                } else {
+                  mapRef.current?.flyToBounds(selection.region.bbox);
+                  mapRef.current?.highlightRegion(selection.region.name);
+                  mapRef.current?.highlightCounty(null);
+                }
               }}
             />
             <Button
               variant="ghost"
               size="sm"
-              title="Return to the full service-area view and clear the county selection"
+              title="Return to the full service-area view and clear the county/region selection"
               onClick={() => {
                 mapRef.current?.resetView();
                 mapRef.current?.highlightCounty(null);
-                countySearchRef.current?.clear();
+                mapRef.current?.highlightRegion(null);
+                placeSearchRef.current?.clear();
               }}
             >
               Reset

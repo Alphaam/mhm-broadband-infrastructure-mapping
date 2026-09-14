@@ -1,5 +1,5 @@
 import type { Feature, FeatureCollection, Geometry, Position } from "geojson";
-import type { County } from "./types";
+import type { County, Region } from "./types";
 
 function eachPosition(geometry: Geometry, visit: (pos: Position) => void) {
   switch (geometry.type) {
@@ -51,6 +51,25 @@ export function countiesFromFeatureCollection(
   collection: FeatureCollection,
   nameProperty = "NAME",
 ): County[] {
+  return collection.features
+    .filter((f) => f.geometry)
+    .map((feature) => ({
+      name: String(feature.properties?.[nameProperty] ?? "Unknown"),
+      bbox: featureBbox(feature),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Builds the region lookup used by <CountySearch/> from the dissolved
+ * region boundary FeatureCollection (already one feature per region — see
+ * scripts/data/build-regions.sh), the same way countiesFromFeatureCollection
+ * reads the county boundaries.
+ */
+export function regionsFromFeatureCollection(
+  collection: FeatureCollection,
+  nameProperty = "REGION",
+): Region[] {
   return collection.features
     .filter((f) => f.geometry)
     .map((feature) => ({

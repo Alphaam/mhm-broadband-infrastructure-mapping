@@ -12,9 +12,11 @@ import {
   COUNTY_NAME_PROPERTY,
   MAPBOX_STYLE,
   MAPBOX_TOKEN,
+  REGION_NAME_PROPERTY,
   SERVICE_AREA_BOUNDS,
   SERVICE_AREA_COUNTIES_PATH,
   SERVICE_AREA_OUTLINE_PATH,
+  SERVICE_AREA_REGIONS_PATH,
 } from "@/lib/mapbox";
 import { resolveDataUrl } from "@/lib/data";
 import type { LayerDefinition } from "@/lib/types";
@@ -24,6 +26,8 @@ export type MapCanvasHandle = {
   resetView: () => void;
   /** Outlines the given county (by CNTY_NM); pass null to clear it. */
   highlightCounty: (name: string | null) => void;
+  /** Outlines the given region (by REGION); pass null to clear it. */
+  highlightRegion: (name: string | null) => void;
 };
 
 type MapCanvasProps = {
@@ -46,6 +50,20 @@ const NO_COUNTY_SELECTED_FILTER: mapboxgl.FilterSpecification = [
 
 function countyHighlightFilter(name: string | null): mapboxgl.FilterSpecification {
   return name ? ["==", ["get", COUNTY_NAME_PROPERTY], name] : NO_COUNTY_SELECTED_FILTER;
+}
+
+const REGION_HIGHLIGHT_SOURCE_ID = "source-service-area-regions";
+const REGION_HIGHLIGHT_CASING_ID = "layer-region-highlight-casing";
+const REGION_HIGHLIGHT_LINE_ID = "layer-region-highlight-line";
+/** A filter that can never match a real region — used to "hide" the highlight. */
+const NO_REGION_SELECTED_FILTER: mapboxgl.FilterSpecification = [
+  "==",
+  ["get", REGION_NAME_PROPERTY],
+  "",
+];
+
+function regionHighlightFilter(name: string | null): mapboxgl.FilterSpecification {
+  return name ? ["==", ["get", REGION_NAME_PROPERTY], name] : NO_REGION_SELECTED_FILTER;
 }
 
 function sanitize(id: string) {
@@ -144,6 +162,32 @@ function addCountyHighlightLayer(map: mapboxgl.Map, initialName: string | null) 
   });
 }
 
+/**
+ * Same pattern as addCountyHighlightLayer, over the dissolved region
+ * boundaries instead of the county boundaries.
+ */
+function addRegionHighlightLayer(map: mapboxgl.Map, initialName: string | null) {
+  if (map.getSource(REGION_HIGHLIGHT_SOURCE_ID)) return;
+  map.addSource(REGION_HIGHLIGHT_SOURCE_ID, {
+    type: "geojson",
+    data: resolveDataUrl(SERVICE_AREA_REGIONS_PATH),
+  });
+  map.addLayer({
+    id: REGION_HIGHLIGHT_CASING_ID,
+    type: "line",
+    source: REGION_HIGHLIGHT_SOURCE_ID,
+    filter: regionHighlightFilter(initialName),
+    paint: { "line-color": "#ffffff", "line-width": 5.5 },
+  });
+  map.addLayer({
+    id: REGION_HIGHLIGHT_LINE_ID,
+    type: "line",
+    source: REGION_HIGHLIGHT_SOURCE_ID,
+    filter: regionHighlightFilter(initialName),
+    paint: { "line-color": "#000000", "line-width": 2.5 },
+  });
+}
+
 function escapeHtml(value: string): string {
   return value.replace(
     /[&<>"']/g,
@@ -193,8 +237,10 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
     layersRef.current = layers;
 
     // Latest requested highlight, read when the highlight layer is first
-    // created (in case highlightCounty() is called before "load" fires).
+    // created (in case highlightCounty()/highlightRegion() is called before
+    // "load" fires).
     const highlightedCountyRef = useRef<string | null>(null);
+    const highlightedRegionRef = useRef<string | null>(null);
 
     useImperativeHandle(ref, () => ({
       flyToBounds(bbox) {
@@ -213,6 +259,14 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
         const filter = countyHighlightFilter(name);
         map.setFilter(COUNTY_HIGHLIGHT_CASING_ID, filter);
         map.setFilter(COUNTY_HIGHLIGHT_LINE_ID, filter);
+      },
+      highlightRegion(name) {
+        highlightedRegionRef.current = name;
+        const map = mapRef.current;
+        if (!map || !loadedRef.current) return;
+        const filter = regionHighlightFilter(name);
+        map.setFilter(REGION_HIGHLIGHT_CASING_ID, filter);
+        map.setFilter(REGION_HIGHLIGHT_LINE_ID, filter);
       },
     }));
 
@@ -267,6 +321,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
         // Added last (on top of every data layer) so the highlight is
         // never buried under a choropleth fill.
         addCountyHighlightLayer(map, highlightedCountyRef.current);
+        addRegionHighlightLayer(map, highlightedRegionRef.current);
       });
       map.on("error", (e) => console.error("Mapbox GL error", e.error));
 

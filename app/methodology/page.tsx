@@ -84,6 +84,9 @@ export default function MethodologyPage() {
             spatial data doesn&apos;t carry funding amounts at all (BEAD, most
             notably).
           </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            As with all public funding programs, federal broadband funding is often subject to review and revision. This map reflects the most up to date information available on federal investment in broadband infrastructure in September 2026, inclusive of the announcement by the National Telecommunications and Information Administration&rsquo;s (NTIA) location &ldquo;true-up&rdquo; program on September 3rd, 2026. Over time, programs or projects may default, and those programs or projects may be removed from the map. The map will be updated as new information becomes available.
+          </p>
           <Source>
             Sources: FCC Broadband Funding Map · Texas Broadband Development
             Office (BDO) award data · HR&amp;A funding tracker
